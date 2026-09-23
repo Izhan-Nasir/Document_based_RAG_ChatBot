@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI-powered Document Chatbot — upload your documents and ask questions powered by RAG technology.">
+  <title>Oracle — Intelligent Document Assistant</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Main Layout -->
+  <div class="app-container">
+    <!-- Main Chat Area -->
+    <main class="chat-area">
+      <!-- Top Bar -->
+      <header class="chat-header">
+        <div class="chat-header-title">
+          <h1 class="h5 mb-0 font-weight-bold">Oracle</h1>
+          <span class="badge bg-secondary ms-2" id="statusIndicator">Ready</span>
+        </div>
+        <div class="chat-header-actions">
+          <button class="btn btn-outline-secondary btn-sm" id="documentsBtn" data-bs-toggle="offcanvas" data-bs-target="#documentsDrawer" aria-controls="documentsDrawer">
+            <i class="bi bi-folder2-open"></i> Documents
+          </button>
+          <button class="btn btn-ghost btn-icon" id="clearChatBtn" title="Clear conversation">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </button>
+          <button class="btn btn-ghost btn-icon" id="themeToggle" title="Toggle theme">
+            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Messages Container -->
+      <div class="messages-container" id="messagesContainer">
+        <!-- Welcome Message -->
+        <div class="welcome-message" id="welcomeMessage">
+          <h2>How can I help you today?</h2>
+          <p class="text-muted">Ask a question about your documents, or upload a new one to get started.</p>
+        </div>
+      </div>
+
+      <!-- Chat Input -->
+      <div class="chat-input-container">
+        <div class="chat-input-wrapper">
+          <div class="processing-banner d-none" id="processingBanner">
+            <i class="bi bi-hourglass-split"></i>
+            <span>Processing document...</span>
+          </div>
+          <form id="chatForm" class="chat-form">
+            <div class="input-group">
+              <textarea
+                class="form-control chat-input"
+                id="chatInput"
+                placeholder="Ask a question..."
+                rows="1"
+                maxlength="2000"
+                aria-label="Ask a question"
+              ></textarea>
+              <button class="btn btn-primary send-btn" type="submit" id="sendBtn" disabled>
+                <i class="bi bi-arrow-up"></i>
+              </button>
+            </div>
+          </form>
+          <div class="chat-input-hint text-muted text-center mt-2 small">
+            AI can make mistakes. Check your documents.
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Offcanvas Documents Drawer -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="documentsDrawer" aria-labelledby="documentsDrawerLabel">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title" id="documentsDrawerLabel">Documents</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column gap-4">
+      
+      <!-- Upload Section -->
+      <div class="drawer-section">
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" accept=".pdf,.txt,.docx,.csv" hidden>
+          <div class="upload-zone-content text-center py-4">
+            <i class="bi bi-upload fs-4 mb-2 d-block"></i>
+            <p class="mb-1 small">Click to upload or drag and drop</p>
+            <p class="text-muted smaller mb-0">PDF, TXT, DOCX, CSV (Max 10MB)</p>
+          </div>
+          <div class="upload-progress d-none text-center py-3" id="uploadProgress">
+            <div class="spinner-border spinner-border-sm mb-2" role="status"></div>
+            <div class="small text-muted" id="uploadProgressText">Processing...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents List -->
+      <div class="drawer-section flex-grow-1">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="mb-0 small fw-bold text-uppercase text-muted">Active Files</h6>
+          <span class="badge bg-secondary rounded-pill" id="docCount">0</span>
+        </div>
+        <div class="document-list" id="documentList">
+          <div class="empty-state text-center text-muted py-5" id="noDocsMessage">
+            <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+            <p class="small mb-0">No documents yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="drawer-footer mt-auto pt-3 border-top">
+        <button class="btn btn-outline-danger w-100 btn-sm" id="endSessionBtn">
+          End Session
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
+
+  <!-- Sources Offcanvas Drawer -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="sourcesDrawer" aria-labelledby="sourcesDrawerLabel">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title" id="sourcesDrawerLabel">Citations</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div id="sourcesDrawerContent" class="d-flex flex-column gap-3">
+        <!-- Dynamic source items will be injected here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Markdown Parsing & Sanitization -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+
+  <!-- App Scripts -->
+  <script src="js/theme.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/upload.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
